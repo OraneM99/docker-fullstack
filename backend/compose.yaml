@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres-db
+
+    environment:
+      POSTGRES_DB: movie-database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d movie-database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: spring-backend
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
