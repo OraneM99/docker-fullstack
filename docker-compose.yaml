@@ -1,0 +1,74 @@
+services:
+
+  postgres:
+    image: postgres:18
+    container_name: carspotter-postgres
+
+    environment:
+      POSTGRES_DB: carspotter_db
+      POSTGRES_USER: carspotter_user
+      POSTGRES_PASSWORD: carspotter_password
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - carspotter_pgdata:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carspotter_user -d carspotter_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - carspotter-net
+
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: carspotter-backend
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      POSTGRES_DB: carspotter_db
+      POSTGRES_USER: carspotter_user
+      POSTGRES_PASSWORD: carspotter_password
+
+    ports:
+      - "8080:8080"
+
+    networks:
+      - carspotter-net
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    container_name: carspotter-frontend
+
+    depends_on:
+      - backend
+
+    ports:
+      - "4200:80"
+
+    networks:
+      - carspotter-net
+
+
+volumes:
+  carspotter_pgdata:
+
+
+networks:
+  carspotter-net:
+    driver: bridge
