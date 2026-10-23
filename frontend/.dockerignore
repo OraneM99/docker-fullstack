@@ -1,0 +1,10 @@
+.angular
+.vscode
+node_modules
+dist
+.prettierrc
+.editorconfig
+git
+gitignore
+Dockerfile*
+dockerignore
